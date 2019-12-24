@@ -2,6 +2,8 @@ package com.ql.util.express.instruction.detail;
 
 import java.util.List;
 
+import com.ql.util.express.exception.QLBizException;
+import com.ql.util.express.exception.QLException;
 import org.apache.commons.logging.Log;
 
 import com.ql.util.express.ArraySwap;
@@ -22,7 +24,7 @@ public class InstructionOperator extends Instruction{
 		return this.operator;
 	}
 	public void execute(RunEnvironment environment,List<String> errorList) throws Exception{
-		ArraySwap parameters = environment.popArray(environment.getContext(),this.opDataNumber);		
+		ArraySwap parameters = environment.popArray(environment.getContext(),this.opDataNumber);
 		if(environment.isTrace() && this.log.isDebugEnabled()){
 			String str = this.operator.toString() + "(";
 			OperateData p = null;
@@ -40,13 +42,18 @@ public class InstructionOperator extends Instruction{
 			str = str + ")";
 			this.log.debug(str);
 		}
-		
-		OperateData result = this.operator.execute(environment.getContext(),parameters, errorList);
-		environment.push(result);
-		environment.programPointAddOne();
+		try {
+            OperateData result = this.operator.execute(environment.getContext(), parameters, errorList);
+            environment.push(result);
+            environment.programPointAddOne();
+        }catch (QLException e){
+			throw new QLException(getExceptionPrefix(),e);
+		}catch (Throwable t){
+			throw new QLBizException(getExceptionPrefix(),t);
+		}
 	}
 	public String toString(){
 		String result = "OP : " + this.operator.toString() +  " OPNUMBER[" + this.opDataNumber +"]";
 		return result;
 	}
-}	
+}
